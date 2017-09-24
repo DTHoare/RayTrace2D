@@ -36,25 +36,12 @@ class Ray {
       Line l = new Line(start, end);
       Line reflector = null;
       PVector point = end.copy();
-      PVector trialPoint;
-      
-      //iterate through each line within the blocks
-      for(Block b : blocks) {
-        for(Line lb : b.lines) {
-          
-          //check intersecton of the ray line with the block line
-          if(l.intersects(lb)) {
-            trialPoint = l.getIntersect(lb);
-            //test to see whether the intersection is closer than the curent ray end point
-            //if it is: update and record which block line this interacts with
-            if( PVector.sub(start, trialPoint).magSq() < PVector.sub(start, point).magSq() ) {
-              point = trialPoint.copy();
-              reflector = new Line(lb.start, lb.end);
-            }
-            
-          }
-        }
+
+      reflector = l.closestIntercept(blocks);
+      if(reflector != null) {
+        point = l.getIntersect(reflector);
       }
+      
       //add the line generated from the closest intersection (or original point if none)
       l = new Line(start, point);
       lines.add(l);

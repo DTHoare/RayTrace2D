@@ -3,16 +3,16 @@ Emitter
 A light source, that emits a collection of rays
 ----------------------------------------------------------------*/
 
-class Emitter {
+class Emitter extends Particle {
   ArrayList<Ray> rays;
-  PVector position;
   
   /*---------------------------------------------------------------
   Init
   ----------------------------------------------------------------*/
-  Emitter(PVector pos) {
+  Emitter(PVector pos, ArrayList<Block> blocks_) {
     position = pos.copy();
     rays = new ArrayList<Ray>();
+    blocks = blocks_;
   }
   
   void reset() {
@@ -24,7 +24,7 @@ class Emitter {
   ----------------------------------------------------------------*/
   
   //emit a Ray in the direction of each node within the set of blocks
-  void emitNodes(ArrayList<Block> blocks) {
+  void emitNodes() {
     Ray r;
     PVector direction;
     for(Block b : blocks) {
@@ -49,7 +49,7 @@ class Emitter {
   /*---------------------------------------------------------------
   Trace
   ----------------------------------------------------------------*/
-  void trace(ArrayList<Block> blocks) {
+  void trace() {
     for(Ray r : rays) {
       r.trace(blocks);
     }

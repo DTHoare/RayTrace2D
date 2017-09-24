@@ -54,3 +54,13 @@ class Block{
   }
   
 }
+
+Block makeBorders() {
+  ArrayList<PVector> points = new ArrayList<PVector>();
+  points.clear();
+  points.add(new PVector(0, 0));
+  points.add(new PVector(width, 0));
+  points.add(new PVector(width, height));
+  points.add(new PVector(0, height));
+  return new Block(points);
+}

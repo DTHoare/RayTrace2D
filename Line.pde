@@ -82,7 +82,30 @@ class Line {
     return PVector.sub(Inorm, N.mult(2*IN));
   }
   
-  
+  Line closestIntercept(ArrayList<Block> blocks) {
+    Line closestIntercept = null;
+    PVector trialPoint;
+    PVector point = end.copy();
+    
+    for(Block b : blocks) {
+      for(Line lb : b.lines) {
+        
+        //check intersecton of the ray line with the block line
+        if(intersects(lb)) {
+          trialPoint = getIntersect(lb);
+          //test to see whether the intersection is closer than the curent ray end point
+          //if it is: update and record which block line this interacts with
+          if( PVector.sub(start, trialPoint).magSq() < PVector.sub(start, point).magSq() ) {
+            point = trialPoint.copy();
+            closestIntercept = new Line(lb.start, lb.end);
+          }
+          
+        }
+      }
+    }
+    
+    return closestIntercept;
+  }
   
   /*---------------------------------------------------------------
   Display
