@@ -30,7 +30,7 @@ void setup(){
   size(500,500, P3D);
   frameRate(fps);
   //use blendMode ADD for physical combination of ray colours
-  blendMode(ADD);
+  //blendMode(ADD);
   
   blocks = new ArrayList<Block>();
   
@@ -75,6 +75,7 @@ Draw
 
 void draw() {
   background(0);
+  blendMode(ADD);
   
   for(Block b : blocks) {
     //b.display();
@@ -86,6 +87,7 @@ void draw() {
   emitter.trace();
   emitter.displayRays(color(255,255,255,2));
   
+  addMist(4, 3.0);
   if(frameCount <= 6*fps) {
     //saveFrame("frame-###.png");
   }
@@ -109,6 +111,27 @@ PVector polarAboutPoint(PVector p, float r, float theta) {
   output.x = p.x + r*cos(theta);
   output.y = p.y + r*sin(theta);
   return output;
+}
+
+void addMist(float r, float T) {
+  float mistLevel;
+  float dx = width * 0.00007;
+  float dy = height * 0.00007;
+  loadPixels();
+  for(int x = 0; x < width; x++) {
+    for(int y = 0; y < height; y++) {
+      //position based, with time looping
+      //mistLevel = noise(x*dx, y*dy, r*sin(revs*frameCount/T));
+      mistLevel = 0.5*noise(x*dx + r*cos(revs*frameCount/T), y*dy + r*sin(revs*frameCount/T));
+      mistLevel += 0.5*noise(100 +x*dx + r*sin(revs*frameCount/T), y*dy + r*cos(revs*frameCount/T));
+      //subtract mist based on inverse brightness - brightest light stays shining through
+      mistLevel *= 0.2*255 * (1-brightness(pixels[y*width + x])/255.0);//(1-pow(brightness(pixels[y*width + x])/255.0, 2.1));
+      pixels[y*width + x] = color(red(pixels[y*width + x])-mistLevel,
+          green(pixels[y*width + x])-mistLevel,
+          blue(pixels[y*width + x])-mistLevel);
+    }
+  }
+  updatePixels();
 }
 
 void originalTestBlocks() {
