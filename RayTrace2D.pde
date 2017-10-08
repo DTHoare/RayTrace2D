@@ -12,14 +12,13 @@ TODO:
 -tidy up initialisation 
 -methods for creating certain block shapes
 -more physics effects
+-hack up a diffuse reflection effect
 -post-processing style effects
 ----------------------------------------------------------------*/
 int fps = 30;
 float revs = TWO_PI/fps;
 ArrayList<Block> blocks;
 Emitter emitter;
-Emitter emitter2;
-Emitter emitter3;
 
 /*---------------------------------------------------------------
 Setup
@@ -35,35 +34,7 @@ void setup(){
   blocks = new ArrayList<Block>();
   
   //make the blocks
-  ArrayList<PVector> points = new ArrayList<PVector>();
 
-  //top block
-  PVector centre = new PVector(width/2, 0.2*height);
-  points.add(polarAboutPoint(centre,width*0.09,0.85*TWO_PI));
-  points.add(polarAboutPoint(centre,width*0.1,0.1*TWO_PI));
-  points.add(polarAboutPoint(centre,width*0.08,0.5*TWO_PI));
-  Block b = new Block(points);
-  blocks.add(b);
-  points.clear();
-  
-  //bottom block
-  centre = new PVector(width*0.4, 0.7*height);
-  points.add(polarAboutPoint(centre,width*0.28,0.6*TWO_PI));
-  points.add(polarAboutPoint(centre,width*0.06,0.1*TWO_PI));
-  points.add(polarAboutPoint(centre,width*0.1,0.4*TWO_PI));
-  b = new Block(points);
-  blocks.add(b);
-  points.clear();
-  
-  //right block
-  centre = new PVector(width*0.6, 0.8*height);
-  points.add(polarAboutPoint(centre,width*0.21,0.45*TWO_PI));
-  points.add(polarAboutPoint(centre,width*0.08,0.8*TWO_PI));
-  points.add(polarAboutPoint(centre,width*0.1,0.9*TWO_PI));
-  points.add(polarAboutPoint(centre,width*0.1,0.2*TWO_PI));
-  b = new Block(points);
-  blocks.add(b);
-  points.clear();
   
   emitter = new Emitter(new PVector(width/2, -0.1*height), blocks);
   emitter.velocity.y = height*0.2;
@@ -85,9 +56,9 @@ void draw() {
   emitter.update();
   emitter.emitRadial(6000, 1);
   emitter.trace();
-  emitter.displayRays(color(255,255,255,2));
+  emitter.displayRays(color(255,255,255));
   
-  addMist(4, 3.0);
+  //addMist(4, 3.0);
   if(frameCount <= 6*fps) {
     //saveFrame("frame-###.png");
   }
@@ -136,26 +107,32 @@ void addMist(float r, float T) {
 
 void originalTestBlocks() {
   ArrayList<PVector> points = new ArrayList<PVector>();
-  points.add(new PVector(0.7*width, 0.7*height));
-  points.add(new PVector(0.8*width, 0.6*height));
-  points.add(new PVector(0.67*width, 0.7*height));
-  points.add(new PVector(0.7*width, 0.8*height));
+  
+  //top block
+  PVector centre = new PVector(width/2, 0.2*height);
+  points.add(polarAboutPoint(centre,width*0.09,0.85*TWO_PI));
+  points.add(polarAboutPoint(centre,width*0.1,0.1*TWO_PI));
+  points.add(polarAboutPoint(centre,width*0.08,0.5*TWO_PI));
   Block b = new Block(points);
   blocks.add(b);
-  
   points.clear();
-  points.add(new PVector(0.3*width, 0.1*height));
-  points.add(new PVector(0.4*width, 0.3*height));
-  points.add(new PVector(0.67*width, 0.2*height));
-  points.add(new PVector(0.5*width, 0.15*height));
+  
+  //bottom block
+  centre = new PVector(width*0.4, 0.7*height);
+  points.add(polarAboutPoint(centre,width*0.28,0.6*TWO_PI));
+  points.add(polarAboutPoint(centre,width*0.06,0.1*TWO_PI));
+  points.add(polarAboutPoint(centre,width*0.1,0.4*TWO_PI));
   b = new Block(points);
   blocks.add(b);
-  
   points.clear();
-  points.add(new PVector(0.1*width, 0.4*height));
-  points.add(new PVector(0.2*width, 0.5*height));
-  points.add(new PVector(0.45*width, 0.9*height));
-  points.add(new PVector(0.15*width, 0.6*height));
+  
+  //right block
+  centre = new PVector(width*0.6, 0.8*height);
+  points.add(polarAboutPoint(centre,width*0.21,0.45*TWO_PI));
+  points.add(polarAboutPoint(centre,width*0.08,0.8*TWO_PI));
+  points.add(polarAboutPoint(centre,width*0.1,0.9*TWO_PI));
+  points.add(polarAboutPoint(centre,width*0.1,0.2*TWO_PI));
   b = new Block(points);
   blocks.add(b);
+  points.clear();
 }

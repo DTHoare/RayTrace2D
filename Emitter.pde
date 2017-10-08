@@ -5,6 +5,7 @@ A light source, that emits a collection of rays
 
 class Emitter extends Particle {
   ArrayList<Ray> rays;
+  float intensity;
   
   /*---------------------------------------------------------------
   Init
@@ -13,11 +14,15 @@ class Emitter extends Particle {
     position = pos.copy();
     rays = new ArrayList<Ray>();
     blocks = blocks_;
+    intensity = 2;
   }
   
   void reset() {
     rays.clear();
   }
+  /*---------------------------------------------------------------
+  Physics
+  ----------------------------------------------------------------*/
   
   /*---------------------------------------------------------------
   Emission
@@ -69,7 +74,8 @@ class Emitter extends Particle {
   void displayRays(color c) {
     PShape lines = createShape();
     lines.beginShape(LINES);
-    lines.stroke(c);
+    color c_ = color(red(c), blue(c), green(c), intensity);
+    lines.stroke(c_);
     for(Ray r : rays) {
       for(Line l : r.lines) {
         lines.vertex(l.start.x, l.start.y);

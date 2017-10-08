@@ -6,6 +6,7 @@ when given a set of objects to interact with
 
 class Ray {
   ArrayList<Line> lines;
+  ArrayList<Float> bValues; //brightness of each ray line
   int bounces;
   PVector origin;
   PVector direction;
@@ -16,6 +17,7 @@ class Ray {
   
   Ray(PVector origin_, PVector direction_, int bounces_) {
     lines = new ArrayList<Line>();
+    bValues = new ArrayList<Float>();
     bounces = bounces_;
     origin = origin_.copy();
     //start with line 'infinitely' long
@@ -30,11 +32,12 @@ class Ray {
     //calculate initial start and end points for first line
     PVector start = origin.copy();
     PVector end = PVector.add(origin,direction);
+    float brightness = 0.3;
     
     for(int i = 0; i <= bounces; i++) {
       //reset test line and associated values
       Line l = new Line(start, end);
-      Line reflector = null;
+      Surface reflector = null;
       PVector point = end.copy();
 
       reflector = l.closestIntercept(blocks);
@@ -45,11 +48,16 @@ class Ray {
       //add the line generated from the closest intersection (or original point if none)
       l = new Line(start, point);
       lines.add(l);
+      bValues.add(brightness);
       
       //no collision, end here
       if(reflector == null) {
         return;
       }
+      
+      //reduce brightness based on the albedo value of the surface
+      brightness *= reflector.albedo;
+      
       
       //reset the start and end to the new values given by the end of the previous line
       //and the direction from the reflection
@@ -65,8 +73,8 @@ class Ray {
   Display
   ----------------------------------------------------------------*/
   void display() {
-    for(Line l : lines) {
-      l.display();
+    for(int i = 0; i < lines.size(); i++) {
+      lines.get(i).display(bValues.get(i));
     }
   }
 }

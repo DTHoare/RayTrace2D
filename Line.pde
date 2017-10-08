@@ -42,7 +42,7 @@ class Line {
     float t = cross(startSub, l.direction) / directionCross;
     float u = cross(startSub, direction) / directionCross;
     
-    //sometimes a value that should return 1 is just over?
+    //include a bias for interception
     if( (t >= 0 && t <= 1.00001) && (u >= 0 && u <= 1.00001) ) {
       return true;
     }
@@ -82,13 +82,37 @@ class Line {
     return PVector.sub(Inorm, N.mult(2*IN));
   }
   
-  Line closestIntercept(ArrayList<Block> blocks) {
-    Line closestIntercept = null;
+  //advanced case for surfaes, allows diffuse reflection
+  PVector getReflection(Surface l) {
+    float random = random(0,1);
+    
+    //specular
+    if(random > l.diffusivity) { 
+      //normal vector:
+      PVector N = new PVector(-1*l.direction.y, l.direction.x).normalize();
+      //incident normalised
+      PVector Inorm = direction.copy().normalize();
+      float IN = PVector.dot(Inorm, N);
+      return PVector.sub(Inorm, N.mult(2*IN));
+    } else {
+      //diffuse
+      //TODO: Fix - this method does not work!
+      PVector N = new PVector(-1*l.direction.y, l.direction.x).normalize();
+      PVector Inorm = direction.copy().normalize();
+      float IN = PVector.dot(Inorm, N);
+      //reflect at any angle away from normal
+      return (N.mult(-2*IN).rotate(random(-PI/4, PI/4)));
+    }
+    
+  }
+  
+  Surface closestIntercept(ArrayList<Block> blocks) {
+    Surface closestIntercept = null;
     PVector trialPoint;
     PVector point = end.copy();
     
     for(Block b : blocks) {
-      for(Line lb : b.lines) {
+      for(Surface lb : b.surfaces) {
         
         //check intersecton of the ray line with the block line
         if(intersects(lb)) {
@@ -97,7 +121,7 @@ class Line {
           //if it is: update and record which block line this interacts with
           if( PVector.sub(start, trialPoint).magSq() < PVector.sub(start, point).magSq() ) {
             point = trialPoint.copy();
-            closestIntercept = new Line(lb.start, lb.end);
+            closestIntercept = new Surface(lb.start, lb.end, lb.albedo, lb.diffusivity);
           }
           
         }
@@ -112,6 +136,11 @@ class Line {
   ----------------------------------------------------------------*/
   void display() {
     stroke(255, 3);
+    line(start.x, start.y, start.x + direction.x, start.y + direction.y);
+  }
+  
+  void display(float b) {
+    stroke(255, b);
     line(start.x, start.y, start.x + direction.x, start.y + direction.y);
   }
 }

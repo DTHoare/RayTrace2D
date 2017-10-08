@@ -11,7 +11,7 @@ Possible upgrades:
 
 class Block{
   ArrayList<PVector> points;
-  ArrayList<Line> lines;
+  ArrayList<Surface> surfaces;
   
   /*---------------------------------------------------------------
   Init
@@ -24,15 +24,15 @@ class Block{
       PVector P = p.copy();
       points.add(P);
     }
-    lines = new ArrayList<Line>();
+    surfaces = new ArrayList<Surface>();
     calculateLines();
   }
   
   //turn a set of points into a set of line segments
   void calculateLines() {
     for(int i = 0; i < points.size(); i++) {
-      Line l = new Line(points.get(i), points.get((i+1)%points.size()));
-      lines.add(l);
+      Surface s = new Surface(points.get(i), points.get((i+1)%points.size()), 0.8, 0.0);
+      surfaces.add(s);
     }
   }
   
@@ -48,8 +48,8 @@ class Block{
     for(PVector p : points){
       ellipse(p.x, p.y, 5, 5);
     }
-    for(Line l : lines) {
-      l.display();
+    for(Surface s : surfaces) {
+      s.display();
     }
   }
   
