@@ -15,29 +15,40 @@ TODO:
 -hack up a diffuse reflection effect
 -post-processing style effects
 ----------------------------------------------------------------*/
+import java.awt.Color;
+
 int fps = 30;
 float revs = TWO_PI/fps;
 ArrayList<Block> blocks;
-Emitter emitter;
-
+ArrayList<Emitter> emitters;
+int T = 10;
 /*---------------------------------------------------------------
 Setup
 ----------------------------------------------------------------*/
 
 void setup(){
   //P3D renderer looked best in tests
-  size(500,500, P3D);
+  size(700,700, P3D);
   frameRate(fps);
   //use blendMode ADD for physical combination of ray colours
   //blendMode(ADD);
   
   blocks = new ArrayList<Block>();
+  emitters = new ArrayList<Emitter>();
   
   //make the blocks
-
+  float theta;
+  for(int i = 0; i < 5; i++) {
+    theta = i * TWO_PI/5;
+    //blocks.add(makeDisk(width/2 + width/4 * cos(theta), height/2 + height/4 * sin(theta),
+    //    width/20, 12));
+  }
   
-  emitter = new Emitter(new PVector(width/2, -0.1*height), blocks);
-  emitter.velocity.y = height*0.2;
+  for(int i = 0; i < 20; i ++) {
+    Emitter emitter = new Emitter(new PVector(width/2, 0.5*height), blocks);
+    emitter.velocity.y = 0; //height*0.2;
+    emitters.add(emitter);
+  }
 }
 
 /*---------------------------------------------------------------
@@ -52,15 +63,58 @@ void draw() {
     //b.display();
   }
   
-  emitter.reset();
-  emitter.update();
-  emitter.emitRadial(6000, 1);
-  emitter.trace();
-  emitter.displayRays(color(255,255,255));
+  //lights set 1
+  for(int i = 0; i < emitters.size(); i++) {
+    Emitter emitter = emitters.get(i);
+    emitter.reset();
+    float theta = i*TWO_PI/emitters.size();
+    float thetaFactor = 0;
+    
+    //smooth step type function
+    float cFactor = floor(frameCount/float(2*fps)) + 0.2*fps*(frameCount/float(2*fps) - floor(frameCount/float(2*fps)));
+    
+    //asd enveloped sin waves for angle dependence 
+    for(int n = 0; n < T; n += 2) {
+      thetaFactor += envelope(0.02,0.06,0.02,frameCount+n*fps,T*fps);
+      //cFactor += floor(frameCount/float(n*fps)) + 0.2*fps*(frameCount/float(n*fps) - floor(frameCount/float(n*fps)));
+    }
+    thetaFactor *= map(cos(2*revs*frameCount - 5*theta), -1, 1, 0, 1);
+    
+    float r = width/4 +thetaFactor*width/20;//* sin(revs*frameCount);
+    
+    emitter.position = new PVector(width/2 + r*cos(theta+ 0.1*revs*frameCount), height/2 + r *sin(theta + 0.1*revs*frameCount));
+    //emitter.update();
+    emitter.emitRadial(1300 + int(thetaFactor*3000), 1);
+    emitter.trace();
+    color c = Color.HSBtoRGB(float(i)/emitters.size()*1.0 +0.2*cFactor, 1.0, 1.0);
+    emitter.displayRays(c);
+  }
+
+  //lights set 2
+  for(int i = 0; i < emitters.size(); i++) {
+    Emitter emitter = emitters.get(i);
+    emitter.reset();
+    float theta = -1*i*TWO_PI/emitters.size();
+    float thetaFactor = 0;
+    for(int n = 0; n < T; n += 2) {
+      thetaFactor += envelope(0.02,0.06,0.02,frameCount+n*fps,T*fps);
+    }
+    thetaFactor *= map(cos(2*revs*frameCount - 5*theta), -1, 1, 0, 1);
+    
+    float r = width/4 +thetaFactor*width/20;//* sin(revs*frameCount);
+    
+    emitter.position = new PVector(width/2 + r*cos(theta+ 0.1*revs*frameCount), height/2 + r *sin(theta + 0.1*revs*frameCount));
+    //emitter.update();
+    emitter.emitRadial(1300 + int(thetaFactor*3000), 1);
+    emitter.trace();
+    color c = Color.HSBtoRGB(float(i)/emitters.size()*1.0, 1.0, 1.0);
+    emitter.displayRays(c);
+  }
+  
   
   //addMist(4, 3.0);
-  if(frameCount <= 6*fps) {
-    //saveFrame("frame-###.png");
+  if(frameCount <= T*fps) {
+    saveFrame("frame-###.png");
   }
 }
 
@@ -135,4 +189,23 @@ void originalTestBlocks() {
   b = new Block(points);
   blocks.add(b);
   points.clear();
+}
+
+//attack-sustain-decay waveform, periodic in T, using time variable t
+//first 3 variables normalised such that 1 = T
+float envelope(float attack, float sustain, float decay, float t, float T) {
+  float time = (t%T)/T;
+  if(time <= attack) {
+    //linear ramp up
+    return time/attack;
+  } else if(time <= (attack + sustain)) {
+    //flat
+    return 1;
+  } else if(time <= (attack + sustain + decay)) {
+    //linear ramp down
+    return 1 - ((time-attack-sustain)/decay);
+  } else {
+    //off
+    return 0;
+  }
 }

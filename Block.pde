@@ -55,6 +55,7 @@ class Block{
   
 }
 
+//create walls around the borders of the canvas
 Block makeBorders() {
   ArrayList<PVector> points = new ArrayList<PVector>();
   points.clear();
@@ -62,5 +63,18 @@ Block makeBorders() {
   points.add(new PVector(width, 0));
   points.add(new PVector(width, height));
   points.add(new PVector(0, height));
+  return new Block(points);
+}
+
+//make a disk composed of n surfaces, about (x, y) with radius r
+Block makeDisk(float x, float y, float r, int n) {
+  
+  ArrayList<PVector> points = new ArrayList<PVector>();
+  float theta;
+  
+  for(int i = 0; i < n; i++) {
+    theta = i * TWO_PI / n;
+    points.add(new PVector(x + r * cos(theta), y + r * sin(theta)));
+  }
   return new Block(points);
 }
