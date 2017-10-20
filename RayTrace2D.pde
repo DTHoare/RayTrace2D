@@ -21,7 +21,7 @@ int fps = 30;
 float revs = TWO_PI/fps;
 ArrayList<Block> blocks;
 ArrayList<Emitter> emitters;
-int T = 10;
+int T = 5;
 /*---------------------------------------------------------------
 Setup
 ----------------------------------------------------------------*/
@@ -38,13 +38,14 @@ void setup(){
   
   //make the blocks
   float theta;
-  for(int i = 0; i < 5; i++) {
-    theta = i * TWO_PI/5;
-    //blocks.add(makeDisk(width/2 + width/4 * cos(theta), height/2 + height/4 * sin(theta),
-    //    width/20, 12));
+  int nblocks = 175;
+  for(int i = 0; i < nblocks; i++) {
+    theta = i * TWO_PI/nblocks;
+    blocks.add(makeDisk(width/2 + width/14 * cos(theta), height/2 + height/14 * sin(theta),
+        width/600, 55));
   }
   
-  for(int i = 0; i < 20; i ++) {
+  for(int i = 0; i < 1; i ++) {
     Emitter emitter = new Emitter(new PVector(width/2, 0.5*height), blocks);
     emitter.velocity.y = 0; //height*0.2;
     emitters.add(emitter);
@@ -59,60 +60,51 @@ void draw() {
   background(0);
   blendMode(ADD);
   
-  for(Block b : blocks) {
+  
+  for(int i = 0; i < blocks.size(); i++) {
+    Block b = blocks.get(i);
+    float theta = i * TWO_PI / blocks.size();
+    if(frameCount < fps*2) {
+      float x = 0;
+      float y = 0;
+      x+= cos(theta) * frameCount*width/2200;
+      y+= sin(theta) * frameCount*width/2200; 
+      x+= frameCount*width/9000 * cos(theta) * sin(revs*4*frameCount - frameCount*theta*TWO_PI);
+      y+= frameCount*width/9000 * sin(theta) * sin(revs*4*frameCount - frameCount*theta*TWO_PI);
+      x+= frameCount*width/9000 * cos(theta) * sin(revs*6*frameCount - frameCount*theta*TWO_PI/3.0);
+      y+= frameCount*width/9000 * sin(theta) * sin(revs*6*frameCount - frameCount*theta*TWO_PI/2.0);
+      b.setPosition(x, y);
+    } else if(frameCount == fps*2) {
+      b.updateVelocity(height*0.7*cos(theta) * map(cos(8*theta),-1,1,0.7,1.3), -1*abs(height*1.6*(sin(theta)))* map(cos(8*theta),-1,1,0.7,1.3));
+    } else {  
+      b.update();
+    }
     //b.display();
   }
   
-  //lights set 1
-  for(int i = 0; i < emitters.size(); i++) {
-    Emitter emitter = emitters.get(i);
+  for (Emitter emitter : emitters) {
+    emitter.blocks = blocks;
     emitter.reset();
-    float theta = i*TWO_PI/emitters.size();
-    float thetaFactor = 0;
-    
-    //smooth step type function
-    float cFactor = floor(frameCount/float(2*fps)) + 0.2*fps*(frameCount/float(2*fps) - floor(frameCount/float(2*fps)));
-    
-    //asd enveloped sin waves for angle dependence 
-    for(int n = 0; n < T; n += 2) {
-      thetaFactor += envelope(0.02,0.06,0.02,frameCount+n*fps,T*fps);
-      //cFactor += floor(frameCount/float(n*fps)) + 0.2*fps*(frameCount/float(n*fps) - floor(frameCount/float(n*fps)));
+    if(frameCount < fps*2) {
+      emitter.position.x += frameCount*cos(frameCount*revs*frameCount)/4.0;
+      emitter.position.y += frameCount*sin(frameCount*revs*frameCount)/4.0;
+      emitter.emitRadial(6000/fps*frameCount,0);
+    } else if(frameCount == fps*2) {
+      emitter.velocity.y = - height*0.6;
+      emitter.velocity.x = 0;
+      emitter.position.x = width/2;
+      emitter.update();
+      emitter.emitRadial(95000,0);
+    } else {  
+      emitter.update();
+      emitter.emitRadial(int(8000 + max(0, 75000*(3.0-float(frameCount)/fps))),0);
     }
-    thetaFactor *= map(cos(2*revs*frameCount - 5*theta), -1, 1, 0, 1);
     
-    float r = width/4 +thetaFactor*width/20;//* sin(revs*frameCount);
-    
-    emitter.position = new PVector(width/2 + r*cos(theta+ 0.1*revs*frameCount), height/2 + r *sin(theta + 0.1*revs*frameCount));
-    //emitter.update();
-    emitter.emitRadial(1300 + int(thetaFactor*3000), 1);
     emitter.trace();
-    color c = Color.HSBtoRGB(float(i)/emitters.size()*1.0 +0.2*cFactor, 1.0, 1.0);
-    emitter.displayRays(c);
-  }
-
-  //lights set 2
-  for(int i = 0; i < emitters.size(); i++) {
-    Emitter emitter = emitters.get(i);
-    emitter.reset();
-    float theta = -1*i*TWO_PI/emitters.size();
-    float thetaFactor = 0;
-    for(int n = 0; n < T; n += 2) {
-      thetaFactor += envelope(0.02,0.06,0.02,frameCount+n*fps,T*fps);
-    }
-    thetaFactor *= map(cos(2*revs*frameCount - 5*theta), -1, 1, 0, 1);
-    
-    float r = width/4 +thetaFactor*width/20;//* sin(revs*frameCount);
-    
-    emitter.position = new PVector(width/2 + r*cos(theta+ 0.1*revs*frameCount), height/2 + r *sin(theta + 0.1*revs*frameCount));
-    //emitter.update();
-    emitter.emitRadial(1300 + int(thetaFactor*3000), 1);
-    emitter.trace();
-    color c = Color.HSBtoRGB(float(i)/emitters.size()*1.0, 1.0, 1.0);
-    emitter.displayRays(c);
+    emitter.displayRays(color(255));
   }
   
-  
-  //addMist(4, 3.0);
+  addMist(4, 3.0, 0.2);
   if(frameCount <= T*fps) {
     saveFrame("frame-###.png");
   }
@@ -138,7 +130,7 @@ PVector polarAboutPoint(PVector p, float r, float theta) {
   return output;
 }
 
-void addMist(float r, float T) {
+void addMist(float r, float T, float level) {
   float mistLevel;
   float dx = width * 0.00007;
   float dy = height * 0.00007;
@@ -150,7 +142,7 @@ void addMist(float r, float T) {
       mistLevel = 0.5*noise(x*dx + r*cos(revs*frameCount/T), y*dy + r*sin(revs*frameCount/T));
       mistLevel += 0.5*noise(100 +x*dx + r*sin(revs*frameCount/T), y*dy + r*cos(revs*frameCount/T));
       //subtract mist based on inverse brightness - brightest light stays shining through
-      mistLevel *= 0.2*255 * (1-brightness(pixels[y*width + x])/255.0);//(1-pow(brightness(pixels[y*width + x])/255.0, 2.1));
+      mistLevel *= level*255 * (1-brightness(pixels[y*width + x])/255.0);//(1-pow(brightness(pixels[y*width + x])/255.0, 2.1));
       pixels[y*width + x] = color(red(pixels[y*width + x])-mistLevel,
           green(pixels[y*width + x])-mistLevel,
           blue(pixels[y*width + x])-mistLevel);

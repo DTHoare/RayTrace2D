@@ -56,6 +56,14 @@ class Particle {
     position = path.end;
   }
   
+  void updateNoCollisions() {
+    accelerate();
+    
+    Line path = getNextPath();
+
+    position = path.end;
+  }
+  
   void accelerate() {
     PVector a = new PVector(0,0);
     //add gravity:
