@@ -21,7 +21,7 @@ int fps = 30;
 float revs = TWO_PI/fps;
 ArrayList<Block> blocks;
 ArrayList<Emitter> emitters;
-int T = 5;
+int T = 9;
 /*---------------------------------------------------------------
 Setup
 ----------------------------------------------------------------*/
@@ -37,17 +37,12 @@ void setup(){
   emitters = new ArrayList<Emitter>();
   
   //make the blocks
-  float theta;
-  int nblocks = 175;
-  for(int i = 0; i < nblocks; i++) {
-    theta = i * TWO_PI/nblocks;
-    blocks.add(makeDisk(width/2 + width/14 * cos(theta), height/2 + height/14 * sin(theta),
-        width/600, 55));
-  }
+  loadBlocks(blocks);
   
   for(int i = 0; i < 1; i ++) {
-    Emitter emitter = new Emitter(new PVector(width/2, 0.5*height), blocks);
-    emitter.velocity.y = 0; //height*0.2;
+    Emitter emitter = new Emitter(new PVector(width/2, -0.2*height), blocks);
+    emitter.velocity.y = 0.21*height; //height*0.2;
+    emitter.velocity.x = 0.07*width;
     emitters.add(emitter);
   }
 }
@@ -57,56 +52,33 @@ Draw
 ----------------------------------------------------------------*/
 
 void draw() {
-  background(0);
-  blendMode(ADD);
-  
-  
-  for(int i = 0; i < blocks.size(); i++) {
-    Block b = blocks.get(i);
-    float theta = i * TWO_PI / blocks.size();
-    if(frameCount < fps*2) {
-      float x = 0;
-      float y = 0;
-      x+= cos(theta) * frameCount*width/2200;
-      y+= sin(theta) * frameCount*width/2200; 
-      x+= frameCount*width/9000 * cos(theta) * sin(revs*4*frameCount - frameCount*theta*TWO_PI);
-      y+= frameCount*width/9000 * sin(theta) * sin(revs*4*frameCount - frameCount*theta*TWO_PI);
-      x+= frameCount*width/9000 * cos(theta) * sin(revs*6*frameCount - frameCount*theta*TWO_PI/3.0);
-      y+= frameCount*width/9000 * sin(theta) * sin(revs*6*frameCount - frameCount*theta*TWO_PI/2.0);
-      b.setPosition(x, y);
-    } else if(frameCount == fps*2) {
-      b.updateVelocity(height*0.7*cos(theta) * map(cos(8*theta),-1,1,0.7,1.3), -1*abs(height*1.6*(sin(theta)))* map(cos(8*theta),-1,1,0.7,1.3));
-    } else {  
-      b.update();
-    }
-    //b.display();
-  }
-  
   for (Emitter emitter : emitters) {
-    emitter.blocks = blocks;
-    emitter.reset();
-    if(frameCount < fps*2) {
-      emitter.position.x += frameCount*cos(frameCount*revs*frameCount)/4.0;
-      emitter.position.y += frameCount*sin(frameCount*revs*frameCount)/4.0;
-      emitter.emitRadial(6000/fps*frameCount,0);
-    } else if(frameCount == fps*2) {
-      emitter.velocity.y = - height*0.6;
-      emitter.velocity.x = 0;
-      emitter.position.x = width/2;
       emitter.update();
-      emitter.emitRadial(95000,0);
-    } else {  
-      emitter.update();
-      emitter.emitRadial(int(8000 + max(0, 75000*(3.0-float(frameCount)/fps))),0);
     }
     
-    emitter.trace();
-    emitter.displayRays(color(255));
-  }
-  
-  addMist(4, 3.0, 0.2);
-  if(frameCount <= T*fps) {
-    saveFrame("frame-###.png");
+  for(int n = 0; n < 1; n++) {
+    background(0);
+    blendMode(ADD);
+    
+    
+    //for(int i = 0; i < blocks.size(); i++) {
+    //  Block b = blocks.get(i);
+    //  b.display();
+    //}
+    
+    for (Emitter emitter : emitters) {
+      //emitter.blocks = blocks;
+      emitter.reset();
+      //emitter.update();
+      emitter.emitRadial(3000,1);
+      emitter.trace();
+      emitter.displayRays(color(255));
+    }
+    
+    addMist(4, 3.0, 0.05);
+    if(frameCount <= T*fps) {
+      saveFrame("frame-###_" + n + ".png");
+    }
   }
 }
 
@@ -181,6 +153,26 @@ void originalTestBlocks() {
   b = new Block(points);
   blocks.add(b);
   points.clear();
+}
+
+void loadBlocks(ArrayList<Block> blocks) {
+  String[] lines = loadStrings("points.txt");
+  for(int i = 0; i < lines.length; i++) {
+    
+    //setup for new block
+    String[] points = lines[i].split(",");
+    ArrayList<PVector> blockPoints = new ArrayList<PVector>();
+    
+    //for each point to a block
+    for(int j = 0; j < points.length; j++) {
+      String[] coords = points[j].split(" ");
+      blockPoints.add(new PVector(float(coords[0])*width, float(coords[1])*height));
+    }
+    
+    Block b = new Block(blockPoints);
+    blocks.add(b);
+    blockPoints.clear();
+  }
 }
 
 //attack-sustain-decay waveform, periodic in T, using time variable t

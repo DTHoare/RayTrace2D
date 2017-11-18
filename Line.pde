@@ -96,12 +96,14 @@ class Line {
       return PVector.sub(Inorm, N.mult(2*IN));
     } else {
       //diffuse
-      //TODO: Fix - this method does not work!
       PVector N = new PVector(-1*l.direction.y, l.direction.x).normalize();
       PVector Inorm = direction.copy().normalize();
       float IN = PVector.dot(Inorm, N);
       //reflect at any angle away from normal
-      return (N.mult(-2*IN).rotate(random(-PI/4, PI/4)));
+      //use cosine pdf for ideal diffuse reflector
+      float x = random(0,1);
+      float theta = asin(2*x-1);
+      return (N.mult(-2.0*IN).rotate(theta));
     }
     
   }

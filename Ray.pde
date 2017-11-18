@@ -32,7 +32,7 @@ class Ray {
     //calculate initial start and end points for first line
     PVector start = origin.copy();
     PVector end = PVector.add(origin,direction);
-    float brightness = 0.3;
+    float brightness = 3;
     
     for(int i = 0; i <= bounces; i++) {
       //reset test line and associated values

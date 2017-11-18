@@ -8,12 +8,14 @@ class Particle {
   PVector velocity;
   float dt = 1/float(fps);
   ArrayList<Block> blocks;
+  float size;
   
   /*---------------------------------------------------------------
   Init
   ----------------------------------------------------------------*/
   Particle() {
     velocity = new PVector(0,0);
+    size = 1.2;
   }
   
   /*---------------------------------------------------------------
@@ -39,14 +41,14 @@ class Particle {
     //handle collisions
     while(obstacle != null) {
       //get intercept point
-      intercept = path.getIntersect(obstacle);
+      intercept = path.getIntersect(obstacle).sub(path.direction.copy().normalize().mult(size));
       //get new vector direction
       direction = path.getReflection(obstacle).normalize();
       //include a coefficient of restitution
-      velocity = PVector.mult(direction, velocity.mag()).mult(0.7);
+      velocity = PVector.mult(direction, velocity.mag()).mult(0.85);
       //calculate new path
       distanceLeft -= PVector.sub(intercept, path.start).mag();
-      path = new Line(PVector.add(intercept, direction.mult(0.1)), PVector.add(intercept, direction.mult(10).mult(distanceLeft)));
+      path = new Line(PVector.add(intercept, direction.mult(0.1+size)), PVector.add(intercept, direction.mult(1/(0.1+size)).mult(distanceLeft)));
       //test collision
       obstacle = path.closestIntercept(blocks);
     }

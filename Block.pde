@@ -36,7 +36,7 @@ class Block extends Particle{
   //turn a set of points into a set of line segments
   void calculateLines() {
     for(int i = 0; i < points.size(); i++) {
-      Surface s = new Surface(points.get(i), points.get((i+1)%points.size()), 0.8, 0.0);
+      Surface s = new Surface(points.get(i), points.get((i+1)%points.size()), 0.1, 0.0);
       surfaces.add(s);
     }
   }
