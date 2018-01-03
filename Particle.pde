@@ -8,7 +8,10 @@ class Particle {
   PVector velocity;
   float dt = 1/float(fps);
   ArrayList<Block> blocks;
+  ArrayList<PVector> attractors;
   float size;
+  int history;
+  ArrayList<PVector> previousPositions;
   
   /*---------------------------------------------------------------
   Init
@@ -16,6 +19,18 @@ class Particle {
   Particle() {
     velocity = new PVector(0,0);
     size = 1.2;
+    attractors = new ArrayList<PVector>();
+    history = 0;
+  }
+  
+  void addAttractor(PVector a) {
+    attractors.add(a.copy());
+  }
+  
+  void setHistory(int n) {
+    history = n;
+    previousPositions = new ArrayList<PVector>();
+    updateHistory();
   }
   
   /*---------------------------------------------------------------
@@ -56,6 +71,19 @@ class Particle {
     //no more collisions!
     //print(velocity.mag() + " ");
     position = path.end;
+    updateHistory();
+  }
+  
+  void updateHistory() {
+    if(history == 0) {
+      return;
+    }
+    
+    if(previousPositions.size() >= history) {
+      previousPositions.remove(0);
+    }
+    
+    previousPositions.add(position);
   }
   
   void updateNoCollisions() {
@@ -72,9 +100,16 @@ class Particle {
     float gravity = height*0.6;
     a.y += dt*gravity;
     
+    for(PVector A : attractors) {
+      PVector attraction = PVector.sub(A, position).div(0.2*height);
+      print(attraction.y + " ");
+      float R = attraction.x*attraction.x + attraction.y*attraction.y;
+      a.add(attraction.normalize().mult(height*0.1*dt / R));
+    }
+    
     //air resistance
     float terminalVelocity = height*0.6;
-    a.sub(velocity.copy().mult(dt*gravity/terminalVelocity));
+    a.sub(velocity.copy().mult(dt*height*0.6/terminalVelocity));
     
     velocity.add(a);
   }

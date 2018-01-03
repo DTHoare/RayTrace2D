@@ -12,7 +12,6 @@ TODO:
 -tidy up initialisation 
 -methods for creating certain block shapes
 -more physics effects
--hack up a diffuse reflection effect
 -post-processing style effects
 ----------------------------------------------------------------*/
 import java.awt.Color;
@@ -21,7 +20,11 @@ int fps = 30;
 float revs = TWO_PI/fps;
 ArrayList<Block> blocks;
 ArrayList<Emitter> emitters;
-int T = 9;
+Emitter emitter0;
+int T = 4;
+int nFireworks = 3;
+int fireworkNo = 0;
+int seed = round(random(0,999999));
 /*---------------------------------------------------------------
 Setup
 ----------------------------------------------------------------*/
@@ -30,6 +33,8 @@ void setup(){
   //P3D renderer looked best in tests
   size(700,700, P3D);
   frameRate(fps);
+  background(0);
+  
   //use blendMode ADD for physical combination of ray colours
   //blendMode(ADD);
   
@@ -37,14 +42,33 @@ void setup(){
   emitters = new ArrayList<Emitter>();
   
   //make the blocks
-  loadBlocks(blocks);
+  //loadBlocks(blocks);
+  //blocks.add(makeSphericalMirror(width/4 + width/20, height/2, width/10, 300, 2*PI * 0.4, 2*PI * 0.6));
+  //blocks.add(makeSphericalMirror(3*width/4, height/2, width/20, 300, 3*PI/2, PI/2));
   
-  for(int i = 0; i < 1; i ++) {
-    Emitter emitter = new Emitter(new PVector(width/2, -0.2*height), blocks);
-    emitter.velocity.y = 0.21*height; //height*0.2;
-    emitter.velocity.x = 0.07*width;
+  //blocks.add(makeMirror(width/4, height/2, height/4, PI/2));
+  //blocks.add(makeDisk(width/2, height/2, width/20, 8));
+  //blocks.get(0).setRotation(TWO_PI/16, width/2, height/2);
+  //blocks.add(makeMirror(3*width/4, height/2, height/4, PI/2));
+  //blocks.add(makeSphericalMirror(width/4 + width/45, height/2, width/2, 500, 2*PI*0.98, 2*PI*0.02));
+  //blocks.add(makeSphericalMirror(3*width/4 + -1*width/45, height/2, width/2, 500, 2*PI*0.48, 2*PI*0.52));
+  
+  //blocks.add(makeSphericalMirror(width/2, height/4 + width/45, height/2, 500, 2*PI*0.23, 2*PI*0.27));
+  
+  
+  for(int i = 0; i < 0; i ++) {
+    Emitter emitter = new Emitter(new PVector(0.5*width, 1.2*height), blocks);
     emitters.add(emitter);
+    //emitter.addAttractor(new PVector(width/2, height/2));
+    emitter.velocity.y = -1.2*height;
   }
+  
+  randomSeed(seed);
+  emitter0 = new Emitter(new PVector(random(0.2,0.8)*width, 1.2*height), blocks);
+  emitter0.velocity.y = -random(1.5,1.9)*height;
+  emitter0.velocity.x = random(-0.3, 0.3)*height;
+  fireworkNo++;
+  
 }
 
 /*---------------------------------------------------------------
@@ -52,31 +76,80 @@ Draw
 ----------------------------------------------------------------*/
 
 void draw() {
-  for (Emitter emitter : emitters) {
-      emitter.update();
+  //explode a firework
+  if (emitter0.intensity > 0 && abs(emitter0.velocity.y) < 0.02*height) {
+    PVector pos = emitter0.position.copy();
+    emitter0.intensity = -1;
+    colorMode(HSB);
+    float c = random(0,255);
+    color col = color(c, 255, 255);
+    explode(pos, col);
+    col = color( (c+random(108, 148)) % 255, 255, 255);
+    explode(pos, col);
+    //explodeCentre(pos);
+    colorMode(RGB);
+  } else if(emitter0.intensity > 0) {
+    emitter0.update();
+  } else { //reset
+    if(fireworkNo % nFireworks == 0) {
+      print("reset ");
+      randomSeed(seed);
     }
+    emitter0 = new Emitter(new PVector(random(0.2,0.8)*width, 1.2*height), blocks);
+    emitter0.velocity.y = -random(1.5,1.9)*height;
+    emitter0.velocity.x = random(-0.3, 0.3)*height;
+    fireworkNo++;
+  }
+  
+  //update
+  for (Emitter emitter : emitters) {
+    emitter.update();
+    emitter.intensity = 0.95*emitter.intensity;
+  }
+  
+  //remove dead
+  for(int i = emitters.size()-1; i > 0; i --) {
+    if(emitters.get(i).intensity <= 0.95) {
+      emitters.remove(i);
+    }
+  }
     
   for(int n = 0; n < 1; n++) {
     background(0);
     blendMode(ADD);
     
     
-    //for(int i = 0; i < blocks.size(); i++) {
-    //  Block b = blocks.get(i);
-    //  b.display();
-    //}
+    for(int i = 0; i < blocks.size(); i++) {
+      Block b = blocks.get(i);
+      //b.setPosition(width/16 * sin (0.5 * frameCount * revs ), 0);
+      //b.display();
+    }
+    //blocks.get(0).setPosition(width/120 * sin (0.5 * frameCount * revs ), 0);
+    //blocks.get(0).setRotation(0.2*frameCount*revs, width/4, height/2);
+    
+    if(emitter0.intensity > 0) {
+      emitter0.reset();
+      emitter0.emitRadial(300,0);
+      emitter0.trace();
+      emitter0.displayRays();
+    }
     
     for (Emitter emitter : emitters) {
       //emitter.blocks = blocks;
       emitter.reset();
-      //emitter.update();
-      emitter.emitRadial(3000,1);
+      emitter.emitRadial(300,0);
+      //emitter.emitLaser(30,80,PI, 30);
       emitter.trace();
-      emitter.displayRays(color(255));
+      emitter.displayRays();
+      emitter.displayTrails(emitter.intensity*10, 1.0, 0);
     }
     
-    addMist(4, 3.0, 0.05);
+    //addMist(4, 3.0, 0.05);
     if(frameCount <= T*fps) {
+      //saveFrame("frame-###_" + n + ".png");
+    }
+    
+    if(fireworkNo > nFireworks && fireworkNo <= 2*nFireworks) {
       saveFrame("frame-###_" + n + ".png");
     }
   }

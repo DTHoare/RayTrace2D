@@ -6,6 +6,7 @@ A light source, that emits a collection of rays
 class Emitter extends Particle {
   ArrayList<Ray> rays;
   float intensity;
+  color col;
   
   /*---------------------------------------------------------------
   Init
@@ -15,6 +16,8 @@ class Emitter extends Particle {
     rays = new ArrayList<Ray>();
     blocks = blocks_;
     intensity = 2;
+    col = color(255);
+    history = 0;
   }
   
   void reset() {
@@ -51,6 +54,16 @@ class Emitter extends Particle {
     }
   }
   
+  void emitLaser(int n, int reflections, float angle, float w) {
+    Ray r;
+    PVector p;
+    for(int i = 0; i<n; i++) {
+      p = position.copy().add( (-w/2 + i * w/n)*sin(angle), (-w/2 + i * w/n)*cos(angle) );
+       r = new Ray(p, new PVector(cos(angle), sin(angle)), reflections);
+       rays.add(r);
+    }
+  }
+  
   /*---------------------------------------------------------------
   Trace
   ----------------------------------------------------------------*/
@@ -64,9 +77,19 @@ class Emitter extends Particle {
   Display
   ----------------------------------------------------------------*/
   void displayRays() {
+    color c = col;
+    PShape lines = createShape();
+    lines.beginShape(LINES);
+    color c_ = color(red(c), blue(c), green(c), intensity);
+    lines.stroke(c_);
     for(Ray r : rays) {
-      r.display();
+      for(Line l : r.lines) {
+        lines.vertex(l.start.x, l.start.y);
+        lines.vertex(l.end.x,l.end.y);
+      }
     }
+    lines.endShape();
+    shape(lines);
   }
   
   //display the rays with a low opacity, so that overlapping rays give
@@ -85,4 +108,59 @@ class Emitter extends Particle {
     lines.endShape();
     shape(lines);
   }
+  
+  void displayTrails(float n, float intensity, float jitter) {
+    if(history == 0 || previousPositions.size() < 2) {
+      return;
+    }
+    
+    color c_ = color(red(col), blue(col), green(col), intensity);
+    stroke(c_);
+    //noStroke();
+    
+    for(int i = 1; i < previousPositions.size(); i++) {
+      PVector pa = previousPositions.get(i);
+      PVector pb = previousPositions.get(i-1);
+      for(int j = 0; j < n * (i+1+(history-previousPositions.size() )); j++) {
+        //PVector p2 = new PVector(random(pb.x, pa.x) + random(-1,1)*jitter,
+        //  random(pb.y, pa.y)+ random(-1,1)*jitter);
+        //ellipse(p2.x, p2.y, 4, 4);
+        PVector p2 = PVector.sub(pa, pb);
+        
+        c_ = color(red(col), blue(col), green(col), 1);
+        stroke(c_);
+        line(pb.x, pb.y, pb.x+p2.x, pb.y+p2.y);
+        
+      }
+    }
+    
+  }
+}
+
+void explode(PVector pos, color col) {
+  for(int i = 0; i < random(100,400); i++) {
+      Emitter emitter = new Emitter(pos, blocks);
+      emitter.col = col;
+      emitter.intensity = random(1,6.0);
+      emitter.setHistory(5);
+      emitters.add(emitter);
+      float theta = random(0, TWO_PI);
+      float r = random(-0.8,0.8)*height;
+      emitter.velocity.y = r * sin(theta);
+      emitter.velocity.x = r * cos(theta);
+    }
+}
+
+void explodeCentre(PVector pos) {
+  for(int i = 0; i < random(30,40); i++) {
+      Emitter emitter = new Emitter(pos, blocks);
+      emitter.col = color(255,0,255);
+      emitter.intensity = random(1.0, 1.4);
+      //emitter.setHistory(3);
+      emitters.add(emitter);
+      float theta = random(0, TWO_PI);
+      float r = random(-0.3,0.3)*height;
+      emitter.velocity.y = r * sin(theta);
+      emitter.velocity.x = r * cos(theta);
+    }
 }
