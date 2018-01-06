@@ -20,8 +20,9 @@ int fps = 30;
 float revs = TWO_PI/fps;
 ArrayList<Block> blocks;
 ArrayList<Emitter> emitters;
+ArrayList<Wire> wires;
 Emitter emitter0;
-int T = 4;
+int T = 12;
 int nFireworks = 3;
 int fireworkNo = 0;
 int seed = round(random(0,999999));
@@ -40,21 +41,10 @@ void setup(){
   
   blocks = new ArrayList<Block>();
   emitters = new ArrayList<Emitter>();
+  wires = new ArrayList<Wire>();
   
   //make the blocks
   //loadBlocks(blocks);
-  //blocks.add(makeSphericalMirror(width/4 + width/20, height/2, width/10, 300, 2*PI * 0.4, 2*PI * 0.6));
-  //blocks.add(makeSphericalMirror(3*width/4, height/2, width/20, 300, 3*PI/2, PI/2));
-  
-  //blocks.add(makeMirror(width/4, height/2, height/4, PI/2));
-  //blocks.add(makeDisk(width/2, height/2, width/20, 8));
-  //blocks.get(0).setRotation(TWO_PI/16, width/2, height/2);
-  //blocks.add(makeMirror(3*width/4, height/2, height/4, PI/2));
-  //blocks.add(makeSphericalMirror(width/4 + width/45, height/2, width/2, 500, 2*PI*0.98, 2*PI*0.02));
-  //blocks.add(makeSphericalMirror(3*width/4 + -1*width/45, height/2, width/2, 500, 2*PI*0.48, 2*PI*0.52));
-  
-  //blocks.add(makeSphericalMirror(width/2, height/4 + width/45, height/2, 500, 2*PI*0.23, 2*PI*0.27));
-  
   
   for(int i = 0; i < 0; i ++) {
     Emitter emitter = new Emitter(new PVector(0.5*width, 1.2*height), blocks);
@@ -64,10 +54,21 @@ void setup(){
   }
   
   randomSeed(seed);
-  emitter0 = new Emitter(new PVector(random(0.2,0.8)*width, 1.2*height), blocks);
-  emitter0.velocity.y = -random(1.5,1.9)*height;
-  emitter0.velocity.x = random(-0.3, 0.3)*height;
-  fireworkNo++;
+  
+  //hour hand
+  Wire w = new Wire();
+  w.addPoint(width*0.5, height*0.5);
+  w.addPoint(width*0.5, height*0.65);
+  w.constructFromPoints();
+  wires.add(w);
+  
+  //minute hand
+  w = new Wire();
+  w.addPoint(width*0.5, height*0.5);
+  w.addPoint(width*0.5, height*0.8);
+  w.constructFromPoints();
+  wires.add(w);
+
   
 }
 
@@ -76,40 +77,32 @@ Draw
 ----------------------------------------------------------------*/
 
 void draw() {
-  //explode a firework
-  if (emitter0.intensity > 0 && abs(emitter0.velocity.y) < 0.02*height) {
-    PVector pos = emitter0.position.copy();
-    emitter0.intensity = -1;
+  wires.get(0).lines.get(0).end.x= width/2 + height*0.15 * cos(revs*frameCount/12 -HALF_PI);
+  wires.get(0).lines.get(0).end.y= width/2 + height*0.15 * sin(revs*frameCount/12 -HALF_PI);
+  wires.get(0).lines.get(0).updateDirection();
+  
+  wires.get(1).lines.get(0).end.x= width/2 + height*0.3 * cos(revs*frameCount -HALF_PI);
+  wires.get(1).lines.get(0).end.y= width/2 + height*0.3 * sin(revs*frameCount -HALF_PI);
+  wires.get(1).lines.get(0).updateDirection();
+  
+  float hourAngle = atan2(wires.get(0).lines.get(0).direction.y, wires.get(0).lines.get(0).direction.x);
+  if( frameCount %30 == 1) {
+    int hour = floor( (hourAngle+HALF_PI+TWO_PI-TWO_PI/12) / (TWO_PI/12))%12 +1;
     colorMode(HSB);
-    float c = random(0,255);
-    color col = color(c, 255, 255);
-    explode(pos, col);
-    col = color( (c+random(108, 148)) % 255, 255, 255);
-    explode(pos, col);
-    //explodeCentre(pos);
+    explode(new PVector(width/2 + width*0.15*cos(hourAngle), height/2 + width*0.15*sin(hourAngle)),
+        color(hour*255.0/12.0, 255, 255), hour);
     colorMode(RGB);
-  } else if(emitter0.intensity > 0) {
-    emitter0.update();
-  } else { //reset
-    if(fireworkNo % nFireworks == 0) {
-      print("reset ");
-      randomSeed(seed);
-    }
-    emitter0 = new Emitter(new PVector(random(0.2,0.8)*width, 1.2*height), blocks);
-    emitter0.velocity.y = -random(1.5,1.9)*height;
-    emitter0.velocity.x = random(-0.3, 0.3)*height;
-    fireworkNo++;
   }
   
   //update
   for (Emitter emitter : emitters) {
     emitter.update();
-    emitter.intensity = 0.95*emitter.intensity;
+    emitter.intensity = 0.9*emitter.intensity;
   }
   
   //remove dead
-  for(int i = emitters.size()-1; i > 0; i --) {
-    if(emitters.get(i).intensity <= 0.95) {
+  for(int i = emitters.size()-1; i >= 0; i --) {
+    if(emitters.get(i).intensity < 1.0) {
       emitters.remove(i);
     }
   }
@@ -117,53 +110,56 @@ void draw() {
   for(int n = 0; n < 1; n++) {
     background(0);
     blendMode(ADD);
-    
-    
-    for(int i = 0; i < blocks.size(); i++) {
-      Block b = blocks.get(i);
-      //b.setPosition(width/16 * sin (0.5 * frameCount * revs ), 0);
-      //b.display();
+
+    for(Wire w : wires) {
+      w.display();
     }
-    //blocks.get(0).setPosition(width/120 * sin (0.5 * frameCount * revs ), 0);
-    //blocks.get(0).setRotation(0.2*frameCount*revs, width/4, height/2);
-    
-    if(emitter0.intensity > 0) {
-      emitter0.reset();
-      emitter0.emitRadial(300,0);
-      emitter0.trace();
-      emitter0.displayRays();
-    }
+    wires.get(1).displayRotationTrail(-revs*3, 40);
     
     for (Emitter emitter : emitters) {
       //emitter.blocks = blocks;
       emitter.reset();
-      emitter.emitRadial(300,0);
+      emitter.emitRadial(1100,0);
       //emitter.emitLaser(30,80,PI, 30);
       emitter.trace();
       emitter.displayRays();
       emitter.displayTrails(emitter.intensity*10, 1.0, 0);
+      
+      emitter.reset();
+      emitter.emitRadial(200,0);
+      emitter.trace();
+      emitter.displayRays(color(255, 255, 255));
     }
-    
     //addMist(4, 3.0, 0.05);
-    if(frameCount <= T*fps) {
+    if(frameCount <= 12*fps) {
       //saveFrame("frame-###_" + n + ".png");
     }
-    
-    if(fireworkNo > nFireworks && fireworkNo <= 2*nFireworks) {
-      saveFrame("frame-###_" + n + ".png");
-    }
+
   }
 }
 
 /*---------------------------------------------------------------
 Other Functions
 ----------------------------------------------------------------*/
+void keyPressed() {
+  if(key == 'p') {
+    saveFrame("screenshot.png");
+  }
+}
+
 
 //Rotate the point p about the point (x, y)
 PVector rotateAboutPoint(PVector p, float x, float y) {
   PVector output = new PVector(0,0);
   output.x = cos(revs*frameCount) * (p.x-x) - sin(revs*frameCount) * (p.y-y) + y;
   output.y = sin(revs*frameCount) * (p.x-x) + cos(revs*frameCount) * (p.y-y) + y;
+  return output;
+}
+
+PVector rotateAboutPoint(PVector p, float x, float y, float angle) {
+  PVector output = new PVector(0,0);
+  output.x = cos(angle) * (p.x-x) - sin(angle) * (p.y-y) + y;
+  output.y = sin(angle) * (p.x-x) + cos(angle) * (p.y-y) + y;
   return output;
 }
 

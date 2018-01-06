@@ -18,6 +18,10 @@ class Line {
     direction = PVector.sub(p2, p1);
   }
   
+  void updateDirection() {
+    direction = PVector.sub(end, start);
+  }
+  
   /*---------------------------------------------------------------
   Math
   

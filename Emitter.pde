@@ -80,7 +80,7 @@ class Emitter extends Particle {
     color c = col;
     PShape lines = createShape();
     lines.beginShape(LINES);
-    color c_ = color(red(c), blue(c), green(c), intensity);
+    color c_ = color(red(c), green(c), blue(c), intensity);
     lines.stroke(c_);
     for(Ray r : rays) {
       for(Line l : r.lines) {
@@ -97,7 +97,7 @@ class Emitter extends Particle {
   void displayRays(color c) {
     PShape lines = createShape();
     lines.beginShape(LINES);
-    color c_ = color(red(c), blue(c), green(c), intensity);
+    color c_ = color(red(c), green(c), blue(c), intensity);
     lines.stroke(c_);
     for(Ray r : rays) {
       for(Line l : r.lines) {
@@ -114,10 +114,6 @@ class Emitter extends Particle {
       return;
     }
     
-    color c_ = color(red(col), blue(col), green(col), intensity);
-    stroke(c_);
-    //noStroke();
-    
     for(int i = 1; i < previousPositions.size(); i++) {
       PVector pa = previousPositions.get(i);
       PVector pb = previousPositions.get(i-1);
@@ -127,7 +123,7 @@ class Emitter extends Particle {
         //ellipse(p2.x, p2.y, 4, 4);
         PVector p2 = PVector.sub(pa, pb);
         
-        c_ = color(red(col), blue(col), green(col), 1);
+        color c_ = color(red(col), green(col), blue(col), 1);
         stroke(c_);
         line(pb.x, pb.y, pb.x+p2.x, pb.y+p2.y);
         
@@ -137,15 +133,18 @@ class Emitter extends Particle {
   }
 }
 
-void explode(PVector pos, color col) {
-  for(int i = 0; i < random(100,400); i++) {
+void explode(PVector pos, color col, int n) {
+  for(int i = 0; i < n; i++) {
       Emitter emitter = new Emitter(pos, blocks);
       emitter.col = col;
-      emitter.intensity = random(1,6.0);
+      emitter.intensity = random(12.0,15.0);
       emitter.setHistory(5);
       emitters.add(emitter);
-      float theta = random(0, TWO_PI);
-      float r = random(-0.8,0.8)*height;
+      //float theta = random(0, TWO_PI);
+      float theta = PI/(n+1) * (i+1) - PI + n*TWO_PI/12.0;
+      float r = 0.6;
+      //if(random(1) < 0.5) {r = random(-1.0,-0.5);} else {r = random(0.5,1.0);}
+      r = r*height;
       emitter.velocity.y = r * sin(theta);
       emitter.velocity.x = r * cos(theta);
     }
