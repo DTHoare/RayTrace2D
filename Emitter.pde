@@ -77,10 +77,9 @@ class Emitter extends Particle {
   Display
   ----------------------------------------------------------------*/
   void displayRays() {
-    color c = col;
     PShape lines = createShape();
     lines.beginShape(LINES);
-    color c_ = color(red(c), green(c), blue(c), intensity);
+    color c_ = color(hue(col), saturation(col), brightness(col), intensity);
     lines.stroke(c_);
     for(Ray r : rays) {
       for(Line l : r.lines) {
@@ -97,7 +96,7 @@ class Emitter extends Particle {
   void displayRays(color c) {
     PShape lines = createShape();
     lines.beginShape(LINES);
-    color c_ = color(red(c), green(c), blue(c), intensity);
+    color c_ = color(hue(c), saturation(c), brightness(c), intensity);
     lines.stroke(c_);
     for(Ray r : rays) {
       for(Line l : r.lines) {
@@ -131,23 +130,33 @@ class Emitter extends Particle {
     }
     
   }
+  
+  void displayCircle(){
+    fill(red(col), green(col), blue(col),10);
+    for(int i = 1; i <= intensity; i++) {
+      ellipse(position.x, position.y, i, i);
+    }
+  }
 }
 
-void explode(PVector pos, color col, int n) {
+ArrayList<Emitter> explode(PVector pos, color col, int n) {
+  ArrayList<Emitter> list = new ArrayList<Emitter>();
   for(int i = 0; i < n; i++) {
       Emitter emitter = new Emitter(pos, blocks);
       emitter.col = col;
-      emitter.intensity = random(12.0,15.0);
-      emitter.setHistory(5);
-      emitters.add(emitter);
+      emitter.intensity = 8;
+      emitter.setHistory(0);
+      list.add(emitter);
       //float theta = random(0, TWO_PI);
-      float theta = PI/(n+1) * (i+1) - PI + n*TWO_PI/12.0;
-      float r = 0.6;
+      float theta = TWO_PI/(6.0) * i - HALF_PI;
+      float r = 0.5 + 0.9*floor(i/6.0);
       //if(random(1) < 0.5) {r = random(-1.0,-0.5);} else {r = random(0.5,1.0);}
       r = r*height;
       emitter.velocity.y = r * sin(theta);
       emitter.velocity.x = r * cos(theta);
     }
+    
+    return(list);
 }
 
 void explodeCentre(PVector pos) {

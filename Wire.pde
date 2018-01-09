@@ -46,6 +46,17 @@ class Wire{
   }
   
   /*---------------------------------------------------------------
+  Motion
+  ----------------------------------------------------------------*/
+  void rotateBy(float theta) {
+    for(Line l : lines) {
+      l.start = rotateAboutPoint(l.start, points.get(0).x, points.get(0).y, theta);
+      l.end = rotateAboutPoint(l.end, points.get(0).x, points.get(0).y, theta);
+      l.updateDirection();
+    }
+  }
+  
+  /*---------------------------------------------------------------
   Display
   ----------------------------------------------------------------*/
   void display() {
@@ -63,14 +74,14 @@ class Wire{
           j = 255.0 * glowLevel / ( (abs(i)-thickness)*(abs(i)-thickness));
         } 
         
-        stroke(red(col),green(col),blue(col),j);
+        stroke(hue(col), saturation(col),brightness(col),j);
         strokeWeight(1);
         line(l.start.x - i*sin(theta), l.start.y + i*cos(theta),
           l.end.x - i*sin(theta), l.end.y + i*cos(theta));
         
         if(i >= 0) {
           ellipseMode(CENTER);
-          stroke(red(col),green(col),blue(col),j);
+          stroke(hue(col), saturation(col),brightness(col),j);
           strokeWeight(1);
           //ellipse(l.start.x, l.start.y, 2*i, 2*i);
           //ellipse(l.end.x, l.end.y, 2*i, 2*i);
@@ -86,14 +97,17 @@ class Wire{
   void displayRotationTrail(float angle, int ghosts) {
     float theta = angle / ghosts;
     Wire w = new Wire();
-    w.lines.addAll(lines);
+    for(PVector p : points) {
+      w.points.add(p.copy());
+    }
+    for(Line l : lines) {
+      w.lines.add(l.copy());
+    }
+    //w.col = col;
     float v = 50.0;
     for(int i = 1; i <= ghosts; i++) {
-      w.col = color(v - v/ghosts*i,v - v/ghosts*i,v - v/ghosts*i);
-      for(Line l : w.lines) {
-        l.start = rotateAboutPoint(l.start, points.get(0).x, points.get(0).y, theta);
-        l.end = rotateAboutPoint(l.end, points.get(0).x, points.get(0).y, theta);
-      }
+      w.col = color(hue(col), saturation(col),v - v/ghosts*i);
+      w.rotateBy(theta);
       w.display();
     }
   }

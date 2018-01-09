@@ -22,6 +22,10 @@ class Line {
     direction = PVector.sub(end, start);
   }
   
+  Line copy() {
+    return(new Line(start, end));
+  }
+  
   /*---------------------------------------------------------------
   Math
   

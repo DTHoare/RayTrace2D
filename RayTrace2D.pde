@@ -20,6 +20,7 @@ int fps = 30;
 float revs = TWO_PI/fps;
 ArrayList<Block> blocks;
 ArrayList<Emitter> emitters;
+ArrayList<Emitter> emitters2;
 ArrayList<Wire> wires;
 Emitter emitter0;
 int T = 12;
@@ -41,6 +42,7 @@ void setup(){
   
   blocks = new ArrayList<Block>();
   emitters = new ArrayList<Emitter>();
+  emitters2 = new ArrayList<Emitter>();
   wires = new ArrayList<Wire>();
   
   //make the blocks
@@ -58,18 +60,34 @@ void setup(){
   //hour hand
   Wire w = new Wire();
   w.addPoint(width*0.5, height*0.5);
-  w.addPoint(width*0.5, height*0.65);
-  w.constructFromPoints();
+  w.addSegment(new PVector(width*0.5, height*0.5), new PVector(width*0.5, height*0.4));
+  //w.addSegment(new PVector(width*0.5, height*0.51), new PVector(width*0.5, height*0.49));
+  //w.addSegment(new PVector(width*0.5, height*0.45), new PVector(width*0.5, height*0.43));
+  //w.addSegment(new PVector(width*0.5, height*0.39), new PVector(width*0.5, height*0.37));
+  //w.addSegment(new PVector(width*0.5, height*0.33), new PVector(width*0.5, height*0.31));
+  //w.constructFromPoints();
+  w.rotateBy(-revs/12.0);
   wires.add(w);
   
   //minute hand
   w = new Wire();
   w.addPoint(width*0.5, height*0.5);
-  w.addPoint(width*0.5, height*0.8);
-  w.constructFromPoints();
+  //w.addSegment(new PVector(width*0.5, height*0.55), new PVector(width*0.5, height*0.20));
+  w.addSegment(new PVector(width*0.5, height*0.39), new PVector(width*0.5, height*0.20));
+  //w.constructFromPoints();
   wires.add(w);
-
-  
+ 
+  for(int i = 1; i <=12; i++) {
+    float hourAngle = i * TWO_PI/12 - 3*TWO_PI/12;
+    emitters2.addAll(explode(new PVector(width/2 + width*0.4*cos(hourAngle), height/2 + width*0.4*sin(hourAngle)),
+        color(95, 95, 95), i));
+  }
+  for (Emitter emitter : emitters2) {
+      emitter.intensity=10.0;
+      //print("\n" + emitter.col + " " + red(emitter.col)+ " " + green(emitter.col)+ " " + blue(emitter.col));
+      emitter.update();
+    }
+  colorMode(HSB);
 }
 
 /*---------------------------------------------------------------
@@ -77,27 +95,36 @@ Draw
 ----------------------------------------------------------------*/
 
 void draw() {
-  wires.get(0).lines.get(0).end.x= width/2 + height*0.15 * cos(revs*frameCount/12 -HALF_PI);
-  wires.get(0).lines.get(0).end.y= width/2 + height*0.15 * sin(revs*frameCount/12 -HALF_PI);
-  wires.get(0).lines.get(0).updateDirection();
+  //wires.get(0).lines.get(0).end.x= width/2 + height*0.2 * cos(revs*frameCount/12 -HALF_PI);
+  //wires.get(0).lines.get(0).end.y= width/2 + height*0.2 * sin(revs*frameCount/12 -HALF_PI);
+  //wires.get(0).lines.get(0).updateDirection();
   
-  wires.get(1).lines.get(0).end.x= width/2 + height*0.3 * cos(revs*frameCount -HALF_PI);
-  wires.get(1).lines.get(0).end.y= width/2 + height*0.3 * sin(revs*frameCount -HALF_PI);
-  wires.get(1).lines.get(0).updateDirection();
+  //wires.get(1).lines.get(0).end.x= width/2 + height*0.3 * cos(revs*frameCount -HALF_PI);
+  //wires.get(1).lines.get(0).end.y= width/2 + height*0.3 * sin(revs*frameCount -HALF_PI);
+  //wires.get(1).lines.get(0).updateDirection();
+  
+  wires.get(0).rotateBy(revs/12.0);
+  //wires.get(1).rotateBy(TWO_PI/3.0 * TWO_PI/40.0 * cos(TWO_PI/40.0*(frameCount % 10)));
+  if(((frameCount-1)%10) > 6) {
+    wires.get(1).rotateBy((TWO_PI/3.0)/3.0);
+  }
   
   float hourAngle = atan2(wires.get(0).lines.get(0).direction.y, wires.get(0).lines.get(0).direction.x);
-  if( frameCount %30 == 1) {
-    int hour = floor( (hourAngle+HALF_PI+TWO_PI-TWO_PI/12) / (TWO_PI/12))%12 +1;
-    colorMode(HSB);
-    explode(new PVector(width/2 + width*0.15*cos(hourAngle), height/2 + width*0.15*sin(hourAngle)),
-        color(hour*255.0/12.0, 255, 255), hour);
-    colorMode(RGB);
+  if( (frameCount-1) %30 == 0) {
+    int hour = round( (hourAngle+HALF_PI+TWO_PI -TWO_PI/12) / (TWO_PI/12))%12 +1;
+    emitters.addAll(explode(new PVector(width/2 + width*0.4*cos(hourAngle), height/2 + width*0.4*sin(hourAngle)),
+        color(hour*255.0/12.0, 255, 255), hour));
+    for (Emitter emitter : emitters) {
+      emitter.update();
+    }
+    wires.get(0).col = color(hour*255.0/12.0, 182, 255);
+    wires.get(1).col = color(hour*255.0/12.0, 182, 255);
   }
   
   //update
   for (Emitter emitter : emitters) {
-    emitter.update();
-    emitter.intensity = 0.9*emitter.intensity;
+    //emitter.update();
+    emitter.intensity -= 0.3;
   }
   
   //remove dead
@@ -110,29 +137,45 @@ void draw() {
   for(int n = 0; n < 1; n++) {
     background(0);
     blendMode(ADD);
+    for (Emitter emitter : emitters2) {
+      emitter.reset();
+      //emitter.emitRadial(1303,0);
+      //emitter.trace();
+      //emitter.displayRays();
+      emitter.displayCircle();
+    }
 
     for(Wire w : wires) {
       w.display();
     }
-    wires.get(1).displayRotationTrail(-revs*3, 40);
+    wires.get(0).displayRotationTrail(-revs*3/12.0, 10);
+    if(( (frameCount-1) %10) > 6) {
+      wires.get(1).displayRotationTrail(-TWO_PI/3.0/3.0, 90);
+    } else {
+      
+    }
+    
     
     for (Emitter emitter : emitters) {
       //emitter.blocks = blocks;
       emitter.reset();
-      emitter.emitRadial(1100,0);
+      emitter.emitRadial(903,0);
       //emitter.emitLaser(30,80,PI, 30);
       emitter.trace();
       emitter.displayRays();
-      emitter.displayTrails(emitter.intensity*10, 1.0, 0);
+      //print("\n" + emitter.col + " " + red(emitter.col)+ " " + green(emitter.col)+ " " + blue(emitter.col));
+      //emitter.displayTrails(emitter.intensity*15, 1.0, 0);
       
       emitter.reset();
-      emitter.emitRadial(200,0);
+      emitter.emitRadial(203,0);
       emitter.trace();
-      emitter.displayRays(color(255, 255, 255));
+      emitter.displayRays(color(0,0,255));
     }
+    
+    
     //addMist(4, 3.0, 0.05);
     if(frameCount <= 12*fps) {
-      //saveFrame("frame-###_" + n + ".png");
+      saveFrame("frame-###_" + n + ".png");
     }
 
   }
